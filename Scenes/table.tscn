@@ -1,0 +1,294 @@
+[gd_scene load_steps=5 format=3 uid="uid://dp680tg2tlwts"]
+
+[ext_resource type="PackedScene" uid="uid://qcn56krvlmgo" path="res://Scenes/table_row.tscn" id="2_c67n0"]
+[ext_resource type="PackedScene" uid="uid://d4ms3kpdlprpy" path="res://Scenes/table_header_cell.tscn" id="3_d8g4m"]
+[ext_resource type="PackedScene" uid="uid://bhcgg0hswtktk" path="res://Scenes/table_cell.tscn" id="4_q16w0"]
+
+[sub_resource type="GDScript" id="GDScript_xov34"]
+resource_name = "Tabla"
+script/source = "extends Control
+
+@onready var _tableRow = preload(\"res://Scenes/table_row.tscn\")
+@onready var _tableCell = preload(\"res://Scenes/table_cell.tscn\")
+@onready var _tableHeaderCell = preload(\"res://Scenes/table_header_cell.tscn\")
+@onready var _tableRows : VBoxContainer
+
+var _seed : int = 1
+
+const Amount : int = 18
+
+var Personas : Array = [
+	\"Juan Aguilar\",
+	\"Nacho Aguilar\",
+	\"Jonatan Blasco\",
+	\"Adrian Garcia\",
+	\"Anando Ahuja\",
+	\"Manuel Pulpillo\"
+]
+
+var _listaFechas : Array = []
+var _personasSeleccionadas : Array
+
+var boldFont : Font = preload(\"res://Fonts/UbuntuSansMono-Bold.ttf\")
+
+func _ready():
+	_tableRows = $Rows
+	
+	# Clear()
+	obtain_dates()
+	set_list()
+
+func set_list():
+	# Clear the table
+	for i in range(_tableRows.get_child_count()):
+		_tableRows.get_child(i).queue_free()
+	
+	# Header
+	var headerRow : HBoxContainer = _tableRow.instantiate()
+	_tableRows.add_child(headerRow)
+	
+	var cell : Label = _tableHeaderCell.instantiate()
+	headerRow.add_child(cell)
+	cell.text = \"Fecha\"
+	cell = _tableHeaderCell.instantiate()
+	headerRow.add_child(cell)
+	cell.text = \"Sonido\"
+	cell = _tableHeaderCell.instantiate()
+	headerRow.add_child(cell)
+	cell.text = \"Video\"
+	
+	set_random_people()
+	
+	var itPersona : int = 0
+	var itRandom : int = 0
+	
+	for i in range(Amount):
+		if i % 2 == 0:
+			var row : HBoxContainer = _tableRow.instantiate()
+			_tableRows.add_child(row)
+			
+			var cellDate : Label = _tableCell.instantiate()
+			row.add_child(cellDate)
+			cellDate.text = _listaFechas[i]
+			cellDate.add_theme_stylebox_override(\"normal\", preload(\"res://Styles/table_cell_variant.tres\"))
+			cellDate.add_theme_font_override(\"font\", boldFont)
+			cellDate.add_theme_color_override(\"font_color\", Color(0.9, 0.9, 0.9))
+			
+			var cellPerson1 : Label = _tableCell.instantiate()
+			row.add_child(cellPerson1)
+			cellPerson1.text = _personasSeleccionadas[itPersona]
+			cellPerson1.add_theme_stylebox_override(\"normal\", preload(\"res://Styles/table_cell_variant.tres\"))
+			
+			var cellPerson2 : Label = _tableCell.instantiate()
+			row.add_child(cellPerson2)
+			cellPerson2.text = _personasSeleccionadas[itPersona+1]
+			cellPerson2.add_theme_stylebox_override(\"normal\", preload(\"res://Styles/table_cell_variant.tres\"))
+		else:
+			var row : HBoxContainer = _tableRow.instantiate()
+			_tableRows.add_child(row)
+			
+			var cellDate : Label = _tableCell.instantiate()
+			row.add_child(cellDate)
+			cellDate.text = _listaFechas[i]
+			cellDate.add_theme_font_override(\"font\", boldFont)
+			cellDate.add_theme_color_override(\"font_color\", Color(0.9, 0.9, 0.9))
+			
+			var cellPerson2 : Label = _tableCell.instantiate()
+			row.add_child(cellPerson2)
+			cellPerson2.text = _personasSeleccionadas[itPersona+1]
+			
+			var cellPerson1 : Label = _tableCell.instantiate()
+			row.add_child(cellPerson1)
+			cellPerson1.text = _personasSeleccionadas[itPersona]
+			
+			itPersona += 2
+			
+		itRandom += 1
+		
+		if itRandom > Personas.size():
+			itRandom = 0
+			set_random_people()
+
+func set_random_people():
+	_personasSeleccionadas.clear()
+	
+	# Shuffle the array of personas
+	var shuffledPersonas : Array = Personas.duplicate()
+	shuffledPersonas.shuffle()
+	
+	var it : int = 0
+	for i in range(Amount):
+		# Add to list
+		_personasSeleccionadas.append(shuffledPersonas[it])
+		it += 1
+		
+		# Reset list
+		if it >= shuffledPersonas.size():
+			var lastPerson = shuffledPersonas[it-1]
+			it = 0
+			shuffledPersonas.shuffle()
+			
+			# Check if the last person is the same as the first
+			while shuffledPersonas[it] == lastPerson:
+				shuffledPersonas.shuffle()
+				
+func obtain_dates():
+	# Get local date
+	var dateNow = Time.get_datetime_dict_from_system()
+	var it : int = 0
+	var listaFechasTemp : Array = []
+	
+	for i in range(Amount * 7):
+		dateNow = addDay(dateNow)
+		
+		print(dateNow)
+		
+		if dateNow.weekday == 4 || dateNow.weekday == 0:
+			# Omitir si la primera fecha es domingo
+			if listaFechasTemp.size() <= 0 and dateNow.weekday == 0:
+				continue
+			
+			var weekdayName : String
+			if dateNow.weekday == Time.WEEKDAY_THURSDAY:
+				weekdayName = \"Jueves,\"
+				
+			if dateNow.weekday == Time.WEEKDAY_SUNDAY:
+				weekdayName = \"Domingo,\"
+			
+			var monthName = getMonth(dateNow.month)
+			
+			# Formato en español con formato: jueves, 9 de mayo de 2024
+			var formattedDate : String = (\"%-8s\" % weekdayName) + (\" %-2s de \" % dateNow.day) + (\"%-5s de \" % monthName) + (\"%-4s \" % dateNow.year)
+			
+			_listaFechas.append(formattedDate)
+			listaFechasTemp.append(dateNow)
+			
+			# Loop
+			it += 1
+			if it == Amount:
+				break
+
+
+func addDay(date_dict):
+	var unixDate = Time.get_unix_time_from_datetime_dict(date_dict)
+	unixDate += 86400
+	var newDate = Time.get_datetime_dict_from_unix_time(unixDate)
+	return newDate
+
+func _on_but_reroll_pressed():
+	seed(Time.get_time_dict_from_system().hash())
+	randomize()
+	set_list()
+	
+	
+func getMonth(monthNum : int) -> String:
+	var name : String
+	
+	if monthNum == Time.MONTH_JANUARY:
+		name = \"enero\"
+	elif monthNum == Time.MONTH_FEBRUARY:
+		name = \"febrero\"
+	elif monthNum == Time.MONTH_MARCH:
+		name = \"marzo\"
+	elif monthNum == Time.MONTH_APRIL:
+		name = \"abril\"
+	elif monthNum == Time.MONTH_MAY:
+		name = \"mayo\"
+	elif monthNum == Time.MONTH_JUNE:
+		name = \"junio\"
+	elif monthNum == Time.MONTH_JULY:
+		name = \"julio\"
+	elif monthNum == Time.MONTH_AUGUST:
+		name = \"agosto\"
+	elif monthNum == Time.MONTH_SEPTEMBER:
+		name = \"septiembre\"
+	elif monthNum == Time.MONTH_OCTOBER:
+		name = \"octubre\"
+	elif monthNum == Time.MONTH_NOVEMBER:
+		name = \"noviembre\"
+	elif monthNum == Time.MONTH_DECEMBER:
+		name = \"diciembre\"
+	else:
+		name = \"mes inválido\"
+	
+	return name
+"
+
+[node name="Table" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_xov34")
+
+[node name="Rows" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="TableRow" parent="Rows" instance=ExtResource("2_c67n0")]
+layout_mode = 2
+
+[node name="TableCell" parent="Rows/TableRow" instance=ExtResource("3_d8g4m")]
+layout_mode = 2
+
+[node name="TableCell2" parent="Rows/TableRow" instance=ExtResource("3_d8g4m")]
+layout_mode = 2
+
+[node name="TableCell3" parent="Rows/TableRow" instance=ExtResource("3_d8g4m")]
+layout_mode = 2
+
+[node name="TableCell4" parent="Rows/TableRow" instance=ExtResource("3_d8g4m")]
+layout_mode = 2
+
+[node name="TableRow2" parent="Rows" instance=ExtResource("2_c67n0")]
+layout_mode = 2
+
+[node name="TableCell" parent="Rows/TableRow2" instance=ExtResource("4_q16w0")]
+layout_mode = 2
+
+[node name="TableCell2" parent="Rows/TableRow2" instance=ExtResource("4_q16w0")]
+layout_mode = 2
+
+[node name="TableCell3" parent="Rows/TableRow2" instance=ExtResource("4_q16w0")]
+layout_mode = 2
+
+[node name="TableCell4" parent="Rows/TableRow2" instance=ExtResource("4_q16w0")]
+layout_mode = 2
+
+[node name="TableRow3" parent="Rows" instance=ExtResource("2_c67n0")]
+layout_mode = 2
+
+[node name="TableCell" parent="Rows/TableRow3" instance=ExtResource("4_q16w0")]
+layout_mode = 2
+
+[node name="TableCell2" parent="Rows/TableRow3" instance=ExtResource("4_q16w0")]
+layout_mode = 2
+
+[node name="TableCell3" parent="Rows/TableRow3" instance=ExtResource("4_q16w0")]
+layout_mode = 2
+
+[node name="TableCell4" parent="Rows/TableRow3" instance=ExtResource("4_q16w0")]
+layout_mode = 2
+
+[node name="TableRow4" parent="Rows" instance=ExtResource("2_c67n0")]
+layout_mode = 2
+
+[node name="TableCell" parent="Rows/TableRow4" instance=ExtResource("4_q16w0")]
+layout_mode = 2
+
+[node name="TableCell2" parent="Rows/TableRow4" instance=ExtResource("4_q16w0")]
+layout_mode = 2
+
+[node name="TableCell3" parent="Rows/TableRow4" instance=ExtResource("4_q16w0")]
+layout_mode = 2
+
+[node name="TableCell4" parent="Rows/TableRow4" instance=ExtResource("4_q16w0")]
+layout_mode = 2

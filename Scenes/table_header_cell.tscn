@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://d4ms3kpdlprpy"]
+
+[ext_resource type="FontFile" uid="uid://cot4u3fhkri18" path="res://Fonts/UbuntuSansMono-Bold.ttf" id="1_xph50"]
+[ext_resource type="StyleBox" uid="uid://cyt3x4uovdv57" path="res://Styles/table_header_cell.tres" id="2_ix7kw"]
+
+[node name="TableCell" type="Label"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("1_xph50")
+theme_override_font_sizes/font_size = 50
+theme_override_styles/normal = ExtResource("2_ix7kw")
+text = "Celda"
+horizontal_alignment = 1
+vertical_alignment = 1

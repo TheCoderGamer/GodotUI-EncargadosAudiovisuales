@@ -1,0 +1,83 @@
+[gd_scene load_steps=3 format=3 uid="uid://bptq1gsxda22w"]
+
+[ext_resource type="PackedScene" uid="uid://dp680tg2tlwts" path="res://Scenes/table.tscn" id="1_a137n"]
+
+[sub_resource type="GDScript" id="GDScript_i2khg"]
+resource_name = "GuardarImagen"
+script/source = "extends Button
+
+
+@onready var viewport = $\"../SubViewportContainer/SubViewport\"
+
+
+func _on_pressed():
+	$\"../FileDialog\".popup()
+
+
+func _on_file_dialog_file_selected(path):
+	var img = viewport.get_texture().get_image()
+	img.save_png(path)
+"
+
+[node name="Node2D" type="Node2D"]
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 39.0
+offset_top = 21.0
+offset_right = 1691.0
+offset_bottom = 969.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.955917, 0.872429)
+size_flags_horizontal = 4
+size_flags_vertical = 3
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer"]
+disable_3d = true
+handle_input_locally = false
+size = Vector2i(1652, 948)
+render_target_update_mode = 4
+
+[node name="Table" parent="SubViewportContainer/SubViewport" instance=ExtResource("1_a137n")]
+
+[node name="FileDialog" type="FileDialog" parent="."]
+size = Vector2i(396, 159)
+access = 2
+filters = PackedStringArray(".png")
+use_native_dialog = true
+
+[node name="ButReroll" type="Button" parent="."]
+custom_minimum_size = Vector2(150, 50)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 760.0
+offset_top = 870.0
+offset_right = 910.0
+offset_bottom = 920.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "REROLL"
+
+[node name="ButGuardar" type="Button" parent="."]
+custom_minimum_size = Vector2(150, 50)
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 25.0
+offset_top = 870.0
+offset_right = 175.0
+offset_bottom = 920.0
+grow_vertical = 0
+text = "GUARDAR IMG"
+script = SubResource("GDScript_i2khg")
+
+[connection signal="file_selected" from="FileDialog" to="ButGuardar" method="_on_file_dialog_file_selected"]
+[connection signal="pressed" from="ButReroll" to="SubViewportContainer/SubViewport/Table" method="_on_but_reroll_pressed"]
+[connection signal="pressed" from="ButGuardar" to="ButGuardar" method="_on_pressed"]
